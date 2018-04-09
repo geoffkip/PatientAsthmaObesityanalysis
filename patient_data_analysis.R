@@ -83,7 +83,8 @@ conditions.visit_occurrence_id = visits.visit_occurrence_id
 WHERE
 asthma_conditions.asthma_type IS NOT NULL
 AND drugs.drug_name IS NOT NULL
-AND obese.BMI_z_score IS NOT NULL 
+AND obese.BMI_z_score IS NOT NULL AND obese.measurement_date >= asthma_conditions.asthma_start_date
+AND drugs.drug_exposure_start_date >= asthma_conditions.asthma_start_date
 ORDER BY
 conditions.person_id,
 visit_start_date)
@@ -114,8 +115,7 @@ person_id) AS asthma_visits
 ON
 patient_cohort.person_id = asthma_visits.person_id
 WHERE
-asthma_unique_visits >= 2 AND BMI_measurement_date >= asthma_start_date
-AND drug_start_date >= asthma_start_date
+asthma_unique_visits >= 2 
 ORDER BY
 patient_cohort.person_id,
 visit_start_date"
