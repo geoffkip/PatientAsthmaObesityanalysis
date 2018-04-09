@@ -83,7 +83,7 @@ conditions.visit_occurrence_id = visits.visit_occurrence_id
 WHERE
 asthma_conditions.asthma_type IS NOT NULL
 AND drugs.drug_name IS NOT NULL
-AND obese.BMI_z_score IS NOT NULL
+AND obese.BMI_z_score IS NOT NULL 
 ORDER BY
 conditions.person_id,
 visit_start_date)
@@ -114,7 +114,8 @@ person_id) AS asthma_visits
 ON
 patient_cohort.person_id = asthma_visits.person_id
 WHERE
-asthma_unique_visits >= 2
+asthma_unique_visits >= 2 AND BMI_measurement_date >= asthma_start_date
+AND drug_start_date >= asthma_start_date
 ORDER BY
 patient_cohort.person_id,
 visit_start_date"
@@ -134,8 +135,8 @@ patient_aggregates1 <- patient_cohort %>%
 
 # calculate date difference variable
 patient_aggregates1$days_between_asthma_diagnosis_and_albuterol_prescription <- 
-  as.Date(patient_aggregates1$date_of_first_asthma_diagnosis)-
-  as.Date(patient_aggregates1$date_of_first_albuterol_prescription)
+  as.Date(patient_aggregates1$date_of_first_albuterol_prescription)-
+  as.Date(patient_aggregates1$date_of_first_asthma_diagnosis)
 
 # Create persons dataset with race ethnicity and gender
 sql2="SELECT
