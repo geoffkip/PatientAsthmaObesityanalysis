@@ -253,3 +253,39 @@ persons.person_id,
 measurement_date"
 
 persons_bmi_measurements = sqldf(sql4)
+
+# Do some graphs and tables
+
+gender_summary <- persons_table %>%
+  group_by(gender) %>%
+  summarise(value = n_distinct(person_id))
+
+# Find the average first_bmi_measurement for difference races and gender
+race_bmi_summary <- persons_table %>%
+  group_by(race) %>%
+  summarise(average_first_bmi_measurement = mean(first_bmi_measurement))
+
+gender_bmi_summary <- persons_table %>%
+  group_by(gender) %>%
+  summarise(average_first_bmi_measurement = mean(first_bmi_measurement))
+
+# Number of Patients by Unique Asthma Visits
+ggplot(persons_table, aes(x = asthma_unique_visits)) +
+  geom_histogram(colour="black", fill="cadetblue", bins=6) +
+  xlab("Total Number of Unique Asthma Visits") + ylab("Number of Patients")
+
+# Plot filled bar chart of race and gender
+
+# ggplot(persons_table, aes(race)) + 
+#   geom_bar(aes(fill = gender)) +
+#   theme(axis.text.x = element_text(colour="grey40", size=12, angle=90, hjust=.5, vjust=.5),
+#         text = element_text(size=10)) +
+#   xlab("Race")
+
+ggplot(persons_table, aes(x = race)) +  
+  geom_bar(aes(y = (..count..)/sum(..count..)), fill="cadetblue") + 
+  scale_y_continuous(labels=percent) +
+  theme(axis.text.x = element_text(colour="grey40", size=12, angle=90, hjust=.5, vjust=.5),
+        text = element_text(size=10)) +
+  ylab("Percent")
+
