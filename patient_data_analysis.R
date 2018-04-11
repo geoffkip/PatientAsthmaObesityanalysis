@@ -207,6 +207,8 @@ persons_derived$birth_datetime <- NULL
 
 persons_table <- left_join(persons_derived, patient_aggregates1, by = c("person_id"))
 
+write.csv(persons_table, "/Users/geoffrey.kip/Projects/R patient data/patient_data/persons_table1.csv")
+
 # Get all inpatient visits
 
 person_inpatient_visits <- inner_join(persons,visit_occurence, by = "person_id") %>%
@@ -216,6 +218,8 @@ person_inpatient_visits <- inner_join(persons,visit_occurence, by = "person_id")
                filter(person_id %in% patient_cohort$person_id & visit_concept_id == 9201)
 
 person_inpatient_visits$visit_concept_id <- NULL
+
+write.csv(person_inpatient_visits, "/Users/geoffrey.kip/Projects/R patient data/patient_data/person_inpatient_visits.csv")
 
 # ALL BMI measurements for a person
 
@@ -231,6 +235,7 @@ persons_bmi_measurements <- left_join(persons_table,measurement, by = "person_id
 
 persons_bmi_measurements$measurement_concept_id <- NULL
 
+write.csv(persons_bmi_measurements, "/Users/geoffrey.kip/Projects/R patient data/patient_data/persons_bmi_measurements.csv")
 
 # Do some graphs and tables
 
