@@ -243,6 +243,8 @@ gender_age_bmi_summary <- persons_bmi_measurements %>%
                          group_by(age,gender) %>%
                          summarise(average_bmi_value = mean(value_as_number))
 
+write.csv(gender_age_bmi_summary, "/Users/geoffrey.kip/Projects/R patient data/patient_data/gender_age_bmi_summary.csv")
+
 ggplot(gender_age_bmi_summary, aes(x = age, y= average_bmi_value, fill = gender)) +
   geom_bar(stat="identity", width=.5, position = "dodge")  +
   xlab("Age Group") +
@@ -253,9 +255,13 @@ race_bmi_summary <- persons_table %>%
   group_by(race) %>%
   summarise(average_first_bmi_measurement = mean(first_bmi_measurement))
 
+write.csv(race_bmi_summary, "/Users/geoffrey.kip/Projects/R patient data/patient_data/race_bmi_summary.csv")
+
 gender_bmi_summary <- persons_table %>%
   group_by(gender) %>%
   summarise(average_first_bmi_measurement = mean(first_bmi_measurement))
+
+write.csv(gender_bmi_summary, "/Users/geoffrey.kip/Projects/R patient data/patient_data/gender_bmi_summary.csv")
 
 # Number of Patients by Unique Asthma Visits
 ggplot(persons_table, aes(x = asthma_unique_visits)) +
