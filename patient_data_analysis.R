@@ -237,7 +237,7 @@ persons_bmi_measurements$measurement_concept_id <- NULL
 
 write.csv(persons_bmi_measurements, "/Users/geoffrey.kip/Projects/R patient data/patient_data/persons_bmi_measurements.csv")
 
-# Do some graphs and tables
+# Do some graphs and tables using ggplot
 
 gender_summary <- persons_table %>%
   group_by(gender) %>%
