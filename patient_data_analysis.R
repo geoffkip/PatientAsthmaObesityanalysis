@@ -2,6 +2,16 @@
 library(ggplot2)
 library(dplyr)
 library(sqldf)
+library(lubridate)
+library(scales)
+
+#Function to calculate age later
+
+age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
+  calc.age = interval(dob, age.day) / duration(num = 1, units = units)
+  if (floor) return(as.integer(floor(calc.age)))
+  return(calc.age)
+}
 
 # Set working directory
 setwd("/Users/geoffrey.kip/Projects/R patient data/patient_data")
@@ -139,17 +149,20 @@ patient_aggregates1$days_between_asthma_diagnosis_and_albuterol_prescription <-
   as.Date(patient_aggregates1$date_of_first_asthma_diagnosis)
 
 # Create persons dataset with race ethnicity and gender
+
 sql2="SELECT
   persons.person_id,
 gender.gender,
 race.race,
-ethnicity.ethnicity
+ethnicity.ethnicity,
+persons.birth_datetime
 FROM (
 SELECT
 persons.person_id,
 gender_concept_id,
 race_concept_id,
-ethnicity_concept_id
+ethnicity_concept_id,
+birth_datetime
 FROM
 persons
 WHERE
@@ -185,80 +198,55 @@ persons.ethnicity_concept_id = ethnicity.concept_id
 "
 persons_derived = sqldf(sql2)
 
+# Calculate age
+
+persons_derived$age <- age(persons_derived$birth_datetime)
+persons_derived$birth_datetime <- NULL
+
 # Join on the aggregates information to Persons derived table to create table1
 
 persons_table <- left_join(persons_derived, patient_aggregates1, by = c("person_id"))
 
 # Get all inpatient visits
 
-sql3="
-SELECT
-  persons.person_id,
-visit_start_date
-FROM (
-SELECT
-person_id
-FROM
-persons
-WHERE
-person_id IN (
-SELECT
-DISTINCT person_id
-FROM
-patient_cohort)) AS persons
-INNER JOIN (
-SELECT
-person_id,
-visit_start_date,
-visit_concept_id
-FROM
-visit_occurence
-WHERE
-visit_concept_id=9201) AS inpatient_visits
-ON
-persons.person_id = inpatient_visits.person_id"
+person_inpatient_visits <- inner_join(persons,visit_occurence, by = "person_id") %>%
+               select(person_id,
+                      visit_start_date,
+                      visit_concept_id) %>%
+               filter(person_id %in% patient_cohort$person_id & visit_concept_id == 9201)
 
-person_inpatient_visits = sqldf(sql3)
+person_inpatient_visits$visit_concept_id <- NULL
 
 # ALL BMI measurements for a person
-sql4="SELECT
-  persons.person_id,
-measurement_date,
-value_as_number
-FROM (
-SELECT
-person_id
-FROM
-persons
-WHERE
-person_id IN (
-SELECT
-DISTINCT person_id
-FROM
-patient_cohort)) AS persons
-LEFT JOIN (
-SELECT
-person_id,
-measurement_date,
-measurement_concept_id,
-value_as_number
-FROM
-measurement
-WHERE
-measurement_concept_id=2000000043) AS BMI_measurements
-ON
-persons.person_id = BMI_measurements.person_id
-ORDER BY
-persons.person_id,
-measurement_date"
 
-persons_bmi_measurements = sqldf(sql4)
+persons_bmi_measurements <- left_join(persons_table,measurement, by = "person_id") %>%
+  select(person_id,
+         age,
+         gender,
+         measurement_date,
+         value_as_number,
+         measurement_concept_id) %>%
+  filter(person_id %in% patient_cohort$person_id & measurement_concept_id == 2000000043) %>%
+  arrange(person_id,measurement_date)
+
+persons_bmi_measurements$measurement_concept_id <- NULL
+
 
 # Do some graphs and tables
 
 gender_summary <- persons_table %>%
   group_by(gender) %>%
   summarise(value = n_distinct(person_id))
+
+# Average BMI measurements by gender and age
+gender_age_bmi_summary <- persons_bmi_measurements %>%
+                         group_by(age,gender) %>%
+                         summarise(average_bmi_value = mean(value_as_number))
+
+ggplot(gender_age_bmi_summary, aes(x = age, y= average_bmi_value, fill = gender)) +
+  geom_bar(stat="identity", width=.5, position = "dodge")  +
+  xlab("Age Group") +
+  ylab("BMI value")
 
 # Find the average first_bmi_measurement for difference races and gender
 race_bmi_summary <- persons_table %>%
